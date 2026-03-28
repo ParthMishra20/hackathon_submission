@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 
 from app.environment import SupportTriageEnv
 from app.models import Action, GraderResponse, ResetRequest, StepResult, TaskListResponse, TaskSummary
@@ -22,7 +22,7 @@ def health() -> dict:
 
 
 @app.post("/reset")
-def reset(req: ResetRequest | None = None):
+def reset(req: ResetRequest | None = Body(default=None)):
     try:
         task_id = req.task_id if req else None
         return ENV.reset(task_id=task_id)
