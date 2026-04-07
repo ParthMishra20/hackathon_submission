@@ -258,6 +258,7 @@ class SupportTriageEnv:
                 "title": t.title,
                 "difficulty": t.difficulty,
                 "objective": t.objective,
+                "grader": True,
             }
             for t in TASKS
         ]

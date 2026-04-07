@@ -85,6 +85,7 @@ class TaskSummary(BaseModel):
     title: str
     difficulty: str
     objective: str
+    grader: bool = True
 
 
 class TaskListResponse(BaseModel):
