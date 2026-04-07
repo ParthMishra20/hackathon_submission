@@ -9,16 +9,34 @@ from pathlib import Path
 from fastapi import Body, FastAPI, HTTPException
 
 from app.environment import SupportTriageEnv
-from app.models import Action, GraderResponse, ResetRequest, StepResult, TaskListResponse, TaskSummary
+from app.models import Action, EnvironmentState, GraderResponse, Observation, ResetRequest, StepResult, TaskListResponse, TaskSummary
+
+try:
+    from openenv.core.env_server.types import EnvironmentMetadata, HealthResponse, HealthStatus, SchemaResponse
+except Exception:  # pragma: no cover
+    EnvironmentMetadata = dict  # type: ignore[assignment]
+    HealthResponse = dict  # type: ignore[assignment]
+    HealthStatus = None  # type: ignore[assignment]
+    SchemaResponse = dict  # type: ignore[assignment]
 
 app = FastAPI(title="OpenEnv Support Triage Environment", version="0.1.0")
 ENV = SupportTriageEnv()
 ROOT = Path(__file__).resolve().parent.parent
 
 
+@app.get("/metadata", response_model=EnvironmentMetadata)
+def metadata():
+    return {
+        "name": "Support Triage OpenEnv",
+        "description": "Real-world customer support triage simulation for training and evaluating agentic workflows.",
+        "version": "0.1.0",
+        "author": "OpenEnv Contributors",
+    }
+
+
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    return {"status": "healthy"}
 
 
 @app.post("/reset")
@@ -41,6 +59,15 @@ def step(action: Action):
 @app.get("/state")
 def state():
     return ENV.state()
+
+
+@app.get("/schema", response_model=SchemaResponse)
+def schema():
+    return {
+        "action": Action.model_json_schema(),
+        "observation": Observation.model_json_schema(),
+        "state": EnvironmentState.model_json_schema(),
+    }
 
 
 @app.get("/tasks", response_model=TaskListResponse)

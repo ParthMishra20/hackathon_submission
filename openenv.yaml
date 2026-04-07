@@ -32,6 +32,8 @@ graders:
     endpoint: /grader?task_id=hard_security_incident
 
 additional_endpoints:
+  - /metadata
+  - /schema
   - /tasks
   - /graders
   - /grader
