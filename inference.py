@@ -1,78 +1,104 @@
 #!/usr/bin/env python
-"""Inference script demonstrating agent interaction with OpenEnv."""
+"""Inference script for OpenEnv with required structured stdout output."""
 
 import argparse
-import json
 import sys
+from typing import Any
 
 import requests
 
+ENV_NAME = "openenv"
+MODEL_NAME = "rule-based-finalize"
 
-def run_episode(server_url: str, task_id: str | None = None) -> dict:
-    """Run one full episode on a task."""
-    # Reset
-    reset_resp = requests.post(
-        f"{server_url}/reset", json={"task_id": task_id})
-    reset_resp.raise_for_status()
-    obs = reset_resp.json()
 
-    task_id = obs["task_id"]
-    done = False
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error: str | None) -> None:
+    done_val = str(done).lower()
+    error_val = error if error else "null"
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        flush=True,
+    )
+
+
+def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> None:
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
+
+
+def run_episode(server_url: str, task_id: str | None = None) -> int:
+    """Run one full episode and emit required START/STEP/END output blocks."""
+    rewards: list[float] = []
     steps = 0
-    total_reward = 0.0
-
-    print(f"Task: {task_id}")
-    print(f"Email: {obs['customer_email'][:100]}...")
-
-    # Simple deterministic policy: finalize immediately
-    while not done and steps < obs.get("max_steps", 10):
-        step_resp = requests.post(
-            f"{server_url}/step",
-            json={"action_type": "finalize"},
-        )
-        step_resp.raise_for_status()
-        payload = step_resp.json()
-        obs = payload["observation"]
-        reward = payload["reward"]["score"]
-        done = payload["done"]
-        total_reward += reward
-        steps += 1
-
-    # Grade
-    grade_resp = requests.get(f"{server_url}/grader")
-    grade_resp.raise_for_status()
-    grade = grade_resp.json()
-
-    return {
-        "task_id": task_id,
-        "steps": steps,
-        "total_reward": round(total_reward, 4),
-        "grader_score": grade["score"],
-        "grader_breakdown": grade["breakdown"],
-    }
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Run inference on OpenEnv")
-    parser.add_argument(
-        "--server",
-        default="http://127.0.0.1:7860",
-        help="OpenEnv server URL",
-    )
-    parser.add_argument(
-        "--task",
-        default=None,
-        help="Task ID (optional, random if not specified)",
-    )
-    args = parser.parse_args()
+    success = False
+    score = 0.0
+    started = False
+    current_task = task_id or "unknown"
 
     try:
-        result = run_episode(args.server, task_id=args.task)
-        print(json.dumps(result, indent=2))
+        reset_resp = requests.post(
+            f"{server_url}/reset", json={"task_id": task_id})
+        reset_resp.raise_for_status()
+        obs: dict[str, Any] = reset_resp.json()
+
+        current_task = str(obs.get("task_id", current_task))
+        max_steps = int(obs.get("max_steps", 10))
+        done = False
+
+        log_start(task=current_task, env=ENV_NAME, model=MODEL_NAME)
+        started = True
+
+        while not done and steps < max_steps:
+            action = "finalize"
+            step_resp = requests.post(
+                f"{server_url}/step", json={"action_type": action})
+            step_resp.raise_for_status()
+
+            payload: dict[str, Any] = step_resp.json()
+            reward_raw = payload.get("reward", {}).get("score", 0.0)
+            reward = float(reward_raw or 0.0)
+            done = bool(payload.get("done", False))
+
+            steps += 1
+            rewards.append(reward)
+            log_step(step=steps, action=action,
+                     reward=reward, done=done, error=None)
+
+        grade_resp = requests.get(f"{server_url}/grader")
+        grade_resp.raise_for_status()
+        grade: dict[str, Any] = grade_resp.json()
+        score = float(grade.get("score", 0.0))
+        score = max(0.0, min(score, 1.0))
+        success = score > 0.0
         return 0
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+    except Exception as exc:
+        if started:
+            # Emit a final step with error so validators can parse execution failures.
+            log_step(step=steps + 1, action="finalize",
+                     reward=0.0, done=True, error=str(exc))
+            steps += 1
+            rewards.append(0.0)
         return 1
+    finally:
+        if not started:
+            log_start(task=current_task, env=ENV_NAME, model=MODEL_NAME)
+        log_end(success=success, steps=steps, score=score, rewards=rewards)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run inference on OpenEnv")
+    parser.add_argument(
+        "--server", default="http://127.0.0.1:7860", help="OpenEnv server URL")
+    parser.add_argument("--task", default=None,
+                        help="Task ID (optional, random if not specified)")
+    args = parser.parse_args()
+    return run_episode(args.server, task_id=args.task)
 
 
 if __name__ == "__main__":
