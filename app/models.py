@@ -86,11 +86,24 @@ class TaskSummary(BaseModel):
     difficulty: str
     objective: str
     grader: bool = True
+    has_grader: bool = True
+    grader_endpoint: str = "/grader"
+    grader_url: str = "/grader"
+    grader_config: dict[str, str] = Field(
+        default_factory=lambda: {"endpoint": "/grader", "method": "GET"}
+    )
+
+
+class GraderSpec(BaseModel):
+    task_id: str
+    endpoint: str = "/grader"
+    method: str = "GET"
 
 
 class TaskListResponse(BaseModel):
     tasks: list[TaskSummary]
     action_schema: dict[str, Any]
+    graders: list[GraderSpec]
 
 
 class ResetRequest(BaseModel):

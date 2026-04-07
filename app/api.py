@@ -49,6 +49,10 @@ def tasks():
     return TaskListResponse(
         tasks=task_rows,
         action_schema=Action.model_json_schema(),
+        graders=[
+            {"task_id": row.task_id, "endpoint": "/grader", "method": "GET"}
+            for row in task_rows
+        ],
     )
 
 
