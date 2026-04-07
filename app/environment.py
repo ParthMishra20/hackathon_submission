@@ -66,7 +66,7 @@ class SupportTriageEnv:
         if self._session.done:
             obs = self._build_observation(
                 last_feedback="Episode already complete")
-            reward = Reward(score=-0.02, reason="Action after completion")
+            reward = Reward(score=0.0, reason="Action after completion")
             return StepResult(observation=obs, reward=reward, done=True, info={"error": "done"})
 
         self._session.step_count += 1
@@ -84,7 +84,10 @@ class SupportTriageEnv:
             reward_value += bonus
             reason = f"{reason}; finalize bonus from grader"
 
-        self._session.total_reward += reward_value
+        reward_value = max(0.0, min(1.0, reward_value))
+        self._session.total_reward = max(
+            0.0, min(1.0, self._session.total_reward + reward_value)
+        )
         self._session.history.append(
             {
                 "step": self._session.step_count,
@@ -95,8 +98,7 @@ class SupportTriageEnv:
         )
 
         obs = self._build_observation(last_feedback=reason)
-        reward = Reward(score=round(
-            max(-1.0, min(1.0, reward_value)), 4), reason=reason)
+        reward = Reward(score=round(reward_value, 4), reason=reason)
         info = {
             "task_id": self._session.task.task_id,
             "total_reward": round(self._session.total_reward, 4),

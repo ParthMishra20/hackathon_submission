@@ -55,7 +55,7 @@ class Observation(BaseModel):
 
 
 class Reward(BaseModel):
-    score: float = Field(..., ge=-1.0, le=1.0)
+    score: float = Field(..., ge=0.0, le=1.0)
     reason: str
 
 
