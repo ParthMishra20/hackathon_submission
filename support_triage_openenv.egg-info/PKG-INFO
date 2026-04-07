@@ -1,0 +1,247 @@
+Metadata-Version: 2.4
+Name: support-triage-openenv
+Version: 0.1.0
+Summary: Real-world customer support triage simulation for OpenEnv
+Author: OpenEnv Contributors
+Project-URL: Repository, https://github.com/ParthMishra20/hackathon_submission
+Project-URL: Homepage, https://huggingface.co/spaces/SuperNeon/hackathon-submission
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi==0.115.12
+Requires-Dist: uvicorn==0.34.0
+Requires-Dist: pydantic==2.11.1
+Requires-Dist: requests==2.32.3
+Requires-Dist: openai>=2.7.2
+Requires-Dist: PyYAML==6.0.2
+Requires-Dist: openenv-core>=0.2.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+
+---
+title: Support Triage OpenEnv
+emoji: "🚀"
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+tags:
+  - openenv
+---
+
+# Support Triage OpenEnv
+
+A complete OpenEnv environment that simulates real-world customer support triage for SaaS operations.
+
+## Why this environment
+
+Customer support triage is a practical, high-impact workflow where agents must:
+
+- classify incoming tickets correctly,
+- set business priority,
+- escalate to the right team when needed,
+- and draft safe, actionable customer responses.
+
+This environment is designed for learning and benchmarking those multi-step decisions.
+
+## Environment Overview
+
+### Domain
+
+Customer support operations, incident handling, and cross-team escalation.
+
+### Episode Flow
+
+1. `reset()` loads one ticket task.
+2. Agent repeatedly calls `step(action)` to triage and respond.
+3. Episode ends when agent calls `finalize` or max step budget is reached.
+4. `grader` returns deterministic score in `[0.0, 1.0]`.
+
+## OpenEnv Spec Compliance
+
+The environment implements typed Pydantic models and core APIs:
+
+- `Action` (`app/models.py`)
+- `Observation` (`app/models.py`)
+- `Reward` (`app/models.py`)
+- `step(action) -> observation, reward, done, info`
+- `reset() -> observation`
+- `state() -> current state`
+- `openenv.yaml` metadata
+
+## Action Space
+
+Action model fields:
+
+- `action_type` (`analyze_email | set_category | set_priority | add_tag | draft_reply | escalate | finalize`)
+- `category` (optional string)
+- `priority` (`low | medium | high | urgent`)
+- `tag` (optional string)
+- `message` (optional reply text)
+- `team` (optional escalation team)
+
+The `/tasks` endpoint returns full JSON schema for actions.
+
+## Observation Space
+
+Each observation includes:
+
+- task metadata (`task_id`, `task_title`)
+- email content (`customer_email`)
+- available controls (`allowed_categories`, `allowed_priorities`, `allowed_teams`)
+- current triage state (`current_category`, `current_priority`, `tags`, `escalation_team`, `draft_reply`)
+- rollout state (`step_count`, `max_steps`, `done`, `last_feedback`)
+
+## Tasks and Difficulty
+
+### 1) Easy: `easy_refund_policy`
+
+Objective: Correctly classify a straightforward refund-policy question and draft a compliant response.
+
+Expected skill: basic categorization, tagging, and simple customer messaging.
+
+### 2) Medium: `medium_data_export_bug`
+
+Objective: Triage a workflow-blocking CSV export bug, prioritize appropriately, escalate to engineering, and request diagnostics.
+
+Expected skill: technical issue handling and business urgency recognition.
+
+### 3) Hard: `hard_security_incident`
+
+Objective: Handle suspected account takeover by setting urgent priority, escalating to security, adding incident tags, and writing safety-first guidance.
+
+Expected skill: security-sensitive triage with correct escalation and high-quality communication.
+
+## Reward Design (Partial Progress + Penalties)
+
+Reward shaping provides trajectory-level signal:
+
+- positive for correct category/priority/tags/escalation/reply quality,
+- partial credit for reply keyword coverage,
+- penalties for invalid or duplicate actions,
+- penalty on max-step exhaustion,
+- finalize-time bonus tied to grader quality.
+
+This avoids sparse binary-only rewards and supports incremental policy improvement.
+
+## Grader
+
+Deterministic grader returns a score in `[0.0, 1.0]` with weighted breakdown:
+
+- `category` 24%
+- `priority` 20%
+- `tags` 20%
+- `escalation` 16%
+- `reply` 20%
+
+Endpoint: `GET /grader`
+
+## API Endpoints
+
+Core OpenEnv:
+
+- `POST /reset`
+- `POST /step`
+- `GET /state`
+
+Required challenge endpoints:
+
+- `GET /tasks` list tasks + action schema
+- `GET /grader` return episode score
+- `POST /baseline` run baseline inference and return all task scores
+
+Health:
+
+- `GET /health`
+
+## Local Setup
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Run server
+
+```bash
+python main.py
+```
+
+Server runs at `http://127.0.0.1:7860`.
+
+## Baseline Inference Script
+
+Script: `baseline/run_baseline.py`
+
+Uses OpenAI API client, reads key from environment:
+
+- `OPENAI_API_KEY` (required)
+- `OPENAI_MODEL` (optional, default `gpt-4.1-mini`)
+
+Run manually:
+
+```bash
+OPENAI_API_KEY=your_key python baseline/run_baseline.py --server http://127.0.0.1:7860
+```
+
+Expected output:
+
+```json
+{"model":"gpt-4.1-mini","task_results":[...],"average_score":0.73}
+```
+
+`/baseline` endpoint executes this script and returns parsed JSON.
+
+## Docker
+
+Build:
+
+```bash
+docker build -t support-triage-openenv .
+```
+
+Run:
+
+```bash
+docker run -p 7860:7860 support-triage-openenv
+```
+
+## Hugging Face Spaces Deployment
+
+Use Docker SDK Space and include tag `openenv` in the Space metadata.
+
+Suggested Space settings:
+
+- SDK: Docker
+- Port: `7860`
+- Secrets: `OPENAI_API_KEY` (for `/baseline`)
+
+After deploy, validate:
+
+- Space URL returns `200` on `/health`
+- `POST /reset` works
+- `/tasks`, `/grader`, `/baseline` reachable
+
+## Validation Checklist
+
+Before submission, verify:
+
+- `openenv.yaml` present and accurate
+- environment APIs respond correctly
+- all 3 tasks present and graded in `[0.0, 1.0]`
+- Docker image builds and runs
+- baseline script runs with OpenAI key
+- HF Space responds successfully
+
+## One-Command Pre-Submission Validation
+
+Run this before submission:
+
+```bash
+python scripts/pre_submission_validate.py
+```
+
+Notes:
+
+- If `OPENAI_API_KEY` is not set, the validator still checks syntax and all local API/grader requirements, and skips live baseline execution.
+- If `OPENAI_API_KEY` is set, it also runs the full baseline flow against a temporary local server.
