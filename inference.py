@@ -12,7 +12,7 @@ from openai import OpenAI
 ENV_NAME = "openenv"
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN = os.getenv("HF_TOKEN")
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 
@@ -39,7 +39,7 @@ def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> No
 
 def choose_action_with_optional_llm(client: OpenAI | None) -> str:
     """Use OpenAI client when token exists; otherwise fall back to deterministic action."""
-    if not HF_TOKEN or client is None:
+    if not API_KEY or client is None:
         return "finalize"
 
     try:
@@ -62,8 +62,12 @@ def choose_action_with_optional_llm(client: OpenAI | None) -> str:
 def run_episode(server_url: str, task_id: str | None = None) -> int:
     """Run one full episode and emit required START/STEP/END output blocks."""
     client: OpenAI | None = None
-    if HF_TOKEN:
-        client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    if API_KEY:
+        # Use injected proxy env vars when present to ensure validator traffic flows through LiteLLM.
+        client = OpenAI(
+            base_url=(os.environ["API_BASE_URL"] if "API_BASE_URL" in os.environ else API_BASE_URL),
+            api_key=(os.environ["API_KEY"] if "API_KEY" in os.environ else API_KEY),
+        )
 
     rewards: list[float] = []
     steps = 0
