@@ -51,15 +51,36 @@ def tasks():
         action_schema=Action.model_json_schema(),
         graders=[
             {
+                "id": row.task_id,
+                "name": row.task_id,
                 "task_id": row.task_id,
+                "url": f"/grader?task_id={row.task_id}",
                 "endpoint": f"/grader?task_id={row.task_id}",
                 "method": "GET",
-                "url": f"/grader?task_id={row.task_id}",
-                "name": row.task_id,
+                "enabled": True,
             }
             for row in task_rows
         ],
     )
+
+
+@app.get("/graders")
+def graders():
+    task_rows = [TaskSummary(**row) for row in ENV.list_tasks()]
+    return {
+        "graders": [
+            {
+                "id": row.task_id,
+                "name": row.task_id,
+                "task_id": row.task_id,
+                "url": f"/grader?task_id={row.task_id}",
+                "endpoint": f"/grader?task_id={row.task_id}",
+                "method": "GET",
+                "enabled": True,
+            }
+            for row in task_rows
+        ]
+    }
 
 
 @app.get("/grader", response_model=GraderResponse)

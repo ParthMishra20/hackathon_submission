@@ -33,5 +33,6 @@ graders:
 
 additional_endpoints:
   - /tasks
+  - /graders
   - /grader
   - /baseline

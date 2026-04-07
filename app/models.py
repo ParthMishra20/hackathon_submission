@@ -81,12 +81,15 @@ class EnvironmentState(BaseModel):
 
 
 class TaskSummary(BaseModel):
+    id: str
     task_id: str
+    name: str
     title: str
     difficulty: str
     objective: str
     grader: str = "/grader"
     has_grader: bool = True
+    grader_enabled: bool = True
     grader_endpoint: str = "/grader"
     grader_url: str = "/grader"
     grader_config: dict[str, str] = Field(
@@ -95,9 +98,13 @@ class TaskSummary(BaseModel):
 
 
 class GraderSpec(BaseModel):
+    id: str
+    name: str
     task_id: str
+    url: str
     endpoint: str
     method: str = "GET"
+    enabled: bool = True
 
 
 class TaskListResponse(BaseModel):

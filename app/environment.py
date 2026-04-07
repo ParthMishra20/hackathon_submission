@@ -256,12 +256,15 @@ class SupportTriageEnv:
     def list_tasks() -> list[dict]:
         return [
             {
+                "id": t.task_id,
                 "task_id": t.task_id,
+                "name": t.task_id,
                 "title": t.title,
                 "difficulty": t.difficulty,
                 "objective": t.objective,
                 "grader": f"/grader?task_id={t.task_id}",
                 "has_grader": True,
+                "grader_enabled": True,
                 "grader_endpoint": f"/grader?task_id={t.task_id}",
                 "grader_url": f"/grader?task_id={t.task_id}",
                 "grader_config": {
