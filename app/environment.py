@@ -260,11 +260,17 @@ class SupportTriageEnv:
                 "title": t.title,
                 "difficulty": t.difficulty,
                 "objective": t.objective,
-                "grader": True,
+                "grader": {
+                    "endpoint": f"/grader?task_id={t.task_id}",
+                    "method": "GET",
+                },
                 "has_grader": True,
-                "grader_endpoint": "/grader",
-                "grader_url": "/grader",
-                "grader_config": {"endpoint": "/grader", "method": "GET"},
+                "grader_endpoint": f"/grader?task_id={t.task_id}",
+                "grader_url": f"/grader?task_id={t.task_id}",
+                "grader_config": {
+                    "endpoint": f"/grader?task_id={t.task_id}",
+                    "method": "GET",
+                },
             }
             for t in TASKS
         ]

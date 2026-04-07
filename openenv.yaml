@@ -25,11 +25,11 @@ models:
   reward_model: app.models.Reward
 graders:
   - task_id: easy_refund_policy
-    endpoint: /grader
+    endpoint: /grader?task_id=easy_refund_policy
   - task_id: medium_data_export_bug
-    endpoint: /grader
+    endpoint: /grader?task_id=medium_data_export_bug
   - task_id: hard_security_incident
-    endpoint: /grader
+    endpoint: /grader?task_id=hard_security_incident
 
 additional_endpoints:
   - /tasks

@@ -50,18 +50,24 @@ def tasks():
         tasks=task_rows,
         action_schema=Action.model_json_schema(),
         graders=[
-            {"task_id": row.task_id, "endpoint": "/grader", "method": "GET"}
+            {
+                "task_id": row.task_id,
+                "endpoint": f"/grader?task_id={row.task_id}",
+                "method": "GET",
+            }
             for row in task_rows
         ],
     )
 
 
 @app.get("/grader", response_model=GraderResponse)
-def grader():
+def grader(task_id: str | None = None):
     try:
+        if task_id:
+            ENV.reset(task_id=task_id)
         result = ENV.grade_episode()
         return GraderResponse(**result)
-    except RuntimeError as exc:
+    except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
