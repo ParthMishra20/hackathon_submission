@@ -81,8 +81,8 @@ def tasks():
                 "id": row.task_id,
                 "name": row.task_id,
                 "task_id": row.task_id,
-                "url": f"/grader?task_id={row.task_id}",
-                "endpoint": f"/grader?task_id={row.task_id}",
+                "url": f"/grader/{row.task_id}",
+                "endpoint": f"/grader/{row.task_id}",
                 "method": "GET",
                 "enabled": True,
             }
@@ -100,8 +100,8 @@ def graders():
                 "id": row.task_id,
                 "name": row.task_id,
                 "task_id": row.task_id,
-                "url": f"/grader?task_id={row.task_id}",
-                "endpoint": f"/grader?task_id={row.task_id}",
+                "url": f"/grader/{row.task_id}",
+                "endpoint": f"/grader/{row.task_id}",
                 "method": "GET",
                 "enabled": True,
             }
@@ -115,6 +115,16 @@ def grader(task_id: str | None = None):
     try:
         if task_id:
             ENV.reset(task_id=task_id)
+        result = ENV.grade_episode()
+        return GraderResponse(**result)
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/grader/{task_id}", response_model=GraderResponse)
+def grader_for_task(task_id: str):
+    try:
+        ENV.reset(task_id=task_id)
         result = ENV.grade_episode()
         return GraderResponse(**result)
     except (RuntimeError, ValueError) as exc:

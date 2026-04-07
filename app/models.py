@@ -87,7 +87,7 @@ class TaskSummary(BaseModel):
     title: str
     difficulty: str
     objective: str
-    grader: str = "/grader"
+    grader: bool = True
     has_grader: bool = True
     grader_enabled: bool = True
     grader_endpoint: str = "/grader"
