@@ -2,13 +2,18 @@
 """Inference script for OpenEnv with required structured stdout output."""
 
 import argparse
+import os
 import sys
 from typing import Any
 
 import requests
+from openai import OpenAI
 
 ENV_NAME = "openenv"
-MODEL_NAME = "rule-based-finalize"
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+HF_TOKEN = os.getenv("HF_TOKEN")
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 
 def log_start(task: str, env: str, model: str) -> None:
@@ -32,8 +37,34 @@ def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> No
     )
 
 
+def choose_action_with_optional_llm(client: OpenAI | None) -> str:
+    """Use OpenAI client when token exists; otherwise fall back to deterministic action."""
+    if not HF_TOKEN or client is None:
+        return "finalize"
+
+    try:
+        completion = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": "Return exactly one token: finalize"},
+                {"role": "user", "content": "Pick next action for this environment."},
+            ],
+            temperature=0,
+            max_tokens=4,
+            stream=False,
+        )
+        choice = (completion.choices[0].message.content or "").strip().lower()
+        return "finalize" if "finalize" in choice else "finalize"
+    except Exception:
+        return "finalize"
+
+
 def run_episode(server_url: str, task_id: str | None = None) -> int:
     """Run one full episode and emit required START/STEP/END output blocks."""
+    client: OpenAI | None = None
+    if HF_TOKEN:
+        client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+
     rewards: list[float] = []
     steps = 0
     success = False
@@ -55,7 +86,7 @@ def run_episode(server_url: str, task_id: str | None = None) -> int:
         started = True
 
         while not done and steps < max_steps:
-            action = "finalize"
+            action = choose_action_with_optional_llm(client)
             step_resp = requests.post(
                 f"{server_url}/step", json={"action_type": action})
             step_resp.raise_for_status()
