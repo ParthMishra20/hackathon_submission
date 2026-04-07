@@ -54,6 +54,8 @@ def tasks():
                 "task_id": row.task_id,
                 "endpoint": f"/grader?task_id={row.task_id}",
                 "method": "GET",
+                "url": f"/grader?task_id={row.task_id}",
+                "name": row.task_id,
             }
             for row in task_rows
         ],

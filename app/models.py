@@ -85,9 +85,7 @@ class TaskSummary(BaseModel):
     title: str
     difficulty: str
     objective: str
-    grader: dict[str, str] | bool = Field(
-        default_factory=lambda: {"endpoint": "/grader", "method": "GET"}
-    )
+    grader: str = "/grader"
     has_grader: bool = True
     grader_endpoint: str = "/grader"
     grader_url: str = "/grader"
