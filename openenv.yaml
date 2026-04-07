@@ -23,6 +23,14 @@ models:
   action_model: app.models.Action
   observation_model: app.models.Observation
   reward_model: app.models.Reward
+graders:
+  - task_id: easy_refund_policy
+    endpoint: /grader
+  - task_id: medium_data_export_bug
+    endpoint: /grader
+  - task_id: hard_security_incident
+    endpoint: /grader
+
 additional_endpoints:
   - /tasks
   - /grader
