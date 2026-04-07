@@ -65,8 +65,10 @@ def run_episode(server_url: str, task_id: str | None = None) -> int:
     if API_KEY:
         # Use injected proxy env vars when present to ensure validator traffic flows through LiteLLM.
         client = OpenAI(
-            base_url=(os.environ["API_BASE_URL"] if "API_BASE_URL" in os.environ else API_BASE_URL),
-            api_key=(os.environ["API_KEY"] if "API_KEY" in os.environ else API_KEY),
+            base_url=(os.environ["API_BASE_URL"]
+                      if "API_BASE_URL" in os.environ else API_BASE_URL),
+            api_key=(os.environ["API_KEY"]
+                     if "API_KEY" in os.environ else API_KEY),
         )
 
     rewards: list[float] = []
