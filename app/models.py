@@ -87,7 +87,7 @@ class TaskSummary(BaseModel):
     title: str
     difficulty: str
     objective: str
-    grader: bool = True
+    grader: str = "/grade"  # URL path to grader endpoint
     has_grader: bool = True
     grader_enabled: bool = True
     grader_endpoint: str = "/grade"
