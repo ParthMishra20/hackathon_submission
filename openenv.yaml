@@ -7,7 +7,7 @@ tags:
   - triage
 entrypoint:
   type: http
-  base_url: http://localhost:7860
+  base_url: https://superneon-hackathon-submission.hf.space
   endpoints:
     reset: /reset
     step: /step
