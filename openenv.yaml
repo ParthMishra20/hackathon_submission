@@ -33,13 +33,6 @@ tasks:
   - id: hard_security_incident
     description: "Respond to Suspected Account Takeover"
     grader: grade/hard_security_incident
-graders:
-  - task_id: easy_refund_policy
-    endpoint: /grade/easy_refund_policy
-  - task_id: medium_data_export_bug
-    endpoint: /grade/medium_data_export_bug
-  - task_id: hard_security_incident
-    endpoint: /grade/hard_security_incident
 
 additional_endpoints:
   - /metadata
