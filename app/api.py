@@ -110,7 +110,7 @@ def graders():
     }
 
 
-@app.get("/grader", response_model=GraderResponse)
+@app.get("/grade", response_model=GraderResponse)
 def grader(task_id: str | None = None):
     try:
         if task_id:

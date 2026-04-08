@@ -38,5 +38,5 @@ additional_endpoints:
   - /metadata
   - /schema
   - /tasks
-  - /graders
+  - /grade
   - /baseline
