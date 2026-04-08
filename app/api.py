@@ -81,8 +81,8 @@ def tasks():
                 "id": row.task_id,
                 "name": row.task_id,
                 "task_id": row.task_id,
-                "url": f"/grader/{row.task_id}",
-                "endpoint": f"/grader/{row.task_id}",
+                "url": f"/grade/{row.task_id}",
+                "endpoint": f"/grade/{row.task_id}",
                 "method": "GET",
                 "enabled": True,
             }
@@ -100,8 +100,8 @@ def graders():
                 "id": row.task_id,
                 "name": row.task_id,
                 "task_id": row.task_id,
-                "url": f"/grader/{row.task_id}",
-                "endpoint": f"/grader/{row.task_id}",
+                "url": f"/grade/{row.task_id}",
+                "endpoint": f"/grade/{row.task_id}",
                 "method": "GET",
                 "enabled": True,
             }
@@ -121,7 +121,7 @@ def grader(task_id: str | None = None):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@app.get("/grader/{task_id}", response_model=GraderResponse)
+@app.get("/grade/{task_id}", response_model=GraderResponse)
 def grader_for_task(task_id: str):
     try:
         ENV.reset(task_id=task_id)

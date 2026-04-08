@@ -265,10 +265,10 @@ class SupportTriageEnv:
                 "grader": True,
                 "has_grader": True,
                 "grader_enabled": True,
-                "grader_endpoint": f"/grader/{t.task_id}",
-                "grader_url": f"/grader/{t.task_id}",
+                "grader_endpoint": f"/grade/{t.task_id}",
+                "grader_url": f"/grade/{t.task_id}",
                 "grader_config": {
-                    "endpoint": f"/grader/{t.task_id}",
+                    "endpoint": f"/grade/{t.task_id}",
                     "method": "GET",
                 },
             }

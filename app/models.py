@@ -90,10 +90,10 @@ class TaskSummary(BaseModel):
     grader: bool = True
     has_grader: bool = True
     grader_enabled: bool = True
-    grader_endpoint: str = "/grader"
-    grader_url: str = "/grader"
+    grader_endpoint: str = "/grade"
+    grader_url: str = "/grade"
     grader_config: dict[str, str] = Field(
-        default_factory=lambda: {"endpoint": "/grader", "method": "GET"}
+        default_factory=lambda: {"endpoint": "/grade", "method": "GET"}
     )
 
 
