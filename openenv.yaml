@@ -26,13 +26,13 @@ models:
 tasks:
   - id: easy_refund_policy
     description: "Handle Basic Refund Policy Question"
-    grader: /grade/easy_refund_policy
+    grader: grade/easy_refund_policy
   - id: medium_data_export_bug
     description: "Triage Data Export Failure"
-    grader: /grade/medium_data_export_bug
+    grader: grade/medium_data_export_bug
   - id: hard_security_incident
     description: "Respond to Suspected Account Takeover"
-    grader: /grade/hard_security_incident
+    grader: grade/hard_security_incident
 graders:
   - task_id: easy_refund_policy
     endpoint: /grade/easy_refund_policy
@@ -46,5 +46,4 @@ additional_endpoints:
   - /schema
   - /tasks
   - /graders
-  - /grader
   - /baseline
