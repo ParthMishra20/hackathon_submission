@@ -107,7 +107,7 @@ def run_episode(server_url: str, task_id: str | None = None) -> int:
             log_step(step=steps, action=action,
                      reward=reward, done=done, error=None)
 
-        grade_resp = requests.get(f"{server_url}/grader")
+        grade_resp = requests.get(f"{server_url}/grade/{current_task}")
         grade_resp.raise_for_status()
         grade: dict[str, Any] = grade_resp.json()
         score = float(grade.get("score", 0.0))
