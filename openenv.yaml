@@ -12,6 +12,7 @@ entrypoint:
     reset: /reset
     step: /step
     state: /state
+    grade: /grade
 metadata:
   domain: customer-support
   difficulty: easy-medium-hard
