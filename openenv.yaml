@@ -30,17 +30,23 @@ tasks:
     difficulty: easy
     max_steps: 10
     description: "Handle Basic Refund Policy Question"
-    grader: grade/easy_refund_policy
+    grader:
+      type: llm
+      prompt_template: "Score the support triage performance 0.0 to 1.0 based on correct category, priority and response quality."
   - id: medium_data_export_bug
     difficulty: medium
     max_steps: 10
     description: "Triage Data Export Failure"
-    grader: grade/medium_data_export_bug
+    grader:
+      type: llm
+      prompt_template: "Score the support triage performance 0.0 to 1.0 based on correct category, priority and escalation."
   - id: hard_security_incident
     difficulty: hard
     max_steps: 10
     description: "Respond to Suspected Account Takeover"
-    grader: grade/hard_security_incident
+    grader:
+      type: llm
+      prompt_template: "Score the security incident handling 0.0 to 1.0 based on urgency, escalation and response quality."
 
 additional_endpoints:
   - /metadata
