@@ -1,3 +1,4 @@
+env_id: support-triage-openenv
 name: support-triage-openenv
 description: Real-world customer support triage simulation for training and evaluating agentic workflows.
 version: 0.1.0
@@ -26,12 +27,18 @@ models:
   reward_model: app.models.Reward
 tasks:
   - id: easy_refund_policy
+    difficulty: easy
+    max_steps: 10
     description: "Handle Basic Refund Policy Question"
     grader: grade/easy_refund_policy
   - id: medium_data_export_bug
+    difficulty: medium
+    max_steps: 10
     description: "Triage Data Export Failure"
     grader: grade/medium_data_export_bug
   - id: hard_security_incident
+    difficulty: hard
+    max_steps: 10
     description: "Respond to Suspected Account Takeover"
     grader: grade/hard_security_incident
 
