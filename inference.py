@@ -116,7 +116,7 @@ def run_episode(server_url: str, task_id: str | None = None) -> int:
         grade_resp.raise_for_status()
         grade: dict[str, Any] = grade_resp.json()
         score = float(grade.get("score", 0.0))
-        score = max(0.0, min(score, 1.0))
+        score = max(0.01, min(score, 0.99))
         success = score > 0.0
         return 0
     except Exception as exc:

@@ -8,6 +8,8 @@ from app.tasks import TASK_MAP, TASKS, TaskSpec
 
 
 MAX_STEPS = 10
+MIN_STRICT_SCORE = 0.01
+MAX_STRICT_SCORE = 0.99
 
 
 @dataclass
@@ -245,11 +247,12 @@ class SupportTriageEnv:
             + 0.16 * breakdown["escalation"]
             + 0.20 * breakdown["reply"]
         )
+        strict_score = max(MIN_STRICT_SCORE, min(MAX_STRICT_SCORE, score))
         return {
             "task_id": task.task_id,
-            "score": round(max(0.0, min(1.0, score)), 4),
+            "score": round(strict_score, 4),
             "breakdown": breakdown,
-            "passed": score >= 0.75,
+            "passed": strict_score >= 0.75,
         }
 
     @staticmethod
