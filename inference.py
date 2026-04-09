@@ -14,6 +14,11 @@ API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+TASK_IDS = [
+    "easy_refund_policy",
+    "medium_data_export_bug",
+    "hard_security_incident",
+]
 
 
 def log_start(task: str, env: str, model: str) -> None:
@@ -29,10 +34,10 @@ def log_step(step: int, action: str, reward: float, done: bool, error: str | Non
     )
 
 
-def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> None:
+def log_end(task: str, success: bool, steps: int, score: float, rewards: list[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     print(
-        f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
+        f"[END] task={task} success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
         flush=True,
     )
 
@@ -125,7 +130,8 @@ def run_episode(server_url: str, task_id: str | None = None) -> int:
     finally:
         if not started:
             log_start(task=current_task, env=ENV_NAME, model=MODEL_NAME)
-        log_end(success=success, steps=steps, score=score, rewards=rewards)
+        log_end(task=current_task, success=success,
+                steps=steps, score=score, rewards=rewards)
 
 
 def main() -> int:
@@ -135,7 +141,16 @@ def main() -> int:
     parser.add_argument("--task", default=None,
                         help="Task ID (optional, random if not specified)")
     args = parser.parse_args()
-    return run_episode(args.server, task_id=args.task)
+    if args.task:
+        return run_episode(args.server, task_id=args.task)
+
+    # Run all required tasks so validator can observe per-task END lines.
+    exit_code = 0
+    for task_id in TASK_IDS:
+        code = run_episode(args.server, task_id=task_id)
+        if code != 0:
+            exit_code = code
+    return exit_code
 
 
 if __name__ == "__main__":
